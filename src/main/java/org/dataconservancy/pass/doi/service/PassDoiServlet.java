@@ -81,7 +81,6 @@ public class PassDoiServlet extends HttpServlet {
 
     private Set<String> activeJobs = new HashSet<>();
 
-
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -107,7 +106,8 @@ public class PassDoiServlet extends HttpServlet {
         String doi = request.getParameter("doi");
 
         //stage 1: verify doi is valid
-        if (verify(doi) == null) {//do not have have a valid xref doi
+        if (verify(doi) == null) {
+            // do not have have a valid xref doi
             try (OutputStream out = response.getOutputStream()) {
                 JsonObject jsonObject = Json.createObjectBuilder()
                                             .add("error", "Supplied DOI is not in valid Crossref format.")
@@ -132,8 +132,9 @@ public class PassDoiServlet extends HttpServlet {
                 return;
             }
 
-        } else {//this DOI is not actively being processed
-            //let's temporarily prohibit new requests for this DOI
+        } else {
+            // this DOI is not actively being processed
+            // let's temporarily prohibit new requests for this DOI
             activeJobs.add(doi);
             Thread t = new Thread(new ExpiringLock(doi, cachePeriod));
             t.start();
@@ -170,12 +171,13 @@ public class PassDoiServlet extends HttpServlet {
                 response.setStatus(responseCode);
                 LOG.info(message);
             }
-        } else {//have a non-empty string to process
+        } else {
+            // have a non-empty string to process
             LOG.debug("Building pass journal");
-            //we probably have something JSONy at this point. Let's build a journal object from it
+            // we probably have something JSONy at this point. Let's build a journal object from it
             Journal journal = buildPassJournal(xrefJsonObject);
             LOG.debug("Comparing journal object with possible PASS version");
-            //and compare it with what we already have in PASS, updating PASS if necessary
+            // and compare it with what we already have in PASS, updating PASS if necessary
 
             Journal updatedJournal = updateJournalInPass(journal);
 
@@ -197,8 +199,9 @@ public class PassDoiServlet extends HttpServlet {
                     response.setStatus(200);
                     LOG.info("Returning result for DOI " + doi);
                 }
-            } else {//journal id is null - this should never happen unless Crosssref journal is insufficient
-                //for example, if a book doi ws supplied which has no issns
+            } else {
+                // journal id is null - this should never happen unless Crosssref journal is insufficient
+                // for example, if a book doi ws supplied which has no issns
 
                 try (OutputStream out = response.getOutputStream()) {
                     String message = "Insufficient information to locate or specify a journal entry.";
@@ -311,8 +314,8 @@ public class PassDoiServlet extends HttpServlet {
         }
 
         if (issnArray != null) {
-            for (int i = 0; i < issnArray.size();
-                 i++) {//if we have issns which were not given as typed, we add them without a type
+            for (int i = 0; i < issnArray.size(); i++) {
+                // if we have issns which were not given as typed, we add them without a type
                 String issn = issnArray.getString(i);
                 if (!processedIssns.contains(issn)) {
                     passJournal.getIssns().add(":" + issn);//do this to conform with type:value format
@@ -344,10 +347,13 @@ public class PassDoiServlet extends HttpServlet {
 
         URI passJournalUri = find(name, issns);
 
-        if (passJournalUri == null) {//we don't have this journal in pass yet
-            if (name != null && !name.isEmpty() && issns.size() > 0) {//we have enough info to make a journal entry
+        if (passJournalUri == null) {
+            // we don't have this journal in pass yet
+            if (name != null && !name.isEmpty() && issns.size() > 0) {
+                // we have enough info to make a journal entry
                 passJournal = passClient.createAndReadResource(journal, Journal.class);
-            } else {//do not have enough to create a new journal
+            } else {
+                // do not have enough to create a new journal
                 LOG.debug("Not enough info for journal " + name);
                 return null;
             }
@@ -426,9 +432,13 @@ public class PassDoiServlet extends HttpServlet {
             }
         }
 
-        if (uriScores.size() > 0) {//we have matches, pick the best one
+        if (uriScores.size() > 0) {
+            // we have matches, pick the best one
             Integer highScore = Collections.max(uriScores.values());
-            int minimumQualifyingScore = 1;//with so little to go on, we may realistically get just one hit
+
+            int minimumQualifyingScore = 1;
+            // with so little to go on, we may realistically get just one hit
+
             List<URI> sortedUris = new ArrayList<>();
 
             for (int i = highScore; i >= minimumQualifyingScore; i--) {
@@ -439,10 +449,14 @@ public class PassDoiServlet extends HttpServlet {
                 }
             }
 
-            if (sortedUris.size() > 0) {// there are matching journals
-                return sortedUris.get(0); //return the best match
+            if (sortedUris.size() > 0) {
+                // there are matching journals
+                // return the best match
+                return sortedUris.get(0);
             }
-        } //nothing matches, create a new journal
+        }
+
+        // nothing matches, create a new journal
         return null;
     }
 
@@ -464,7 +478,6 @@ public class PassDoiServlet extends HttpServlet {
         Matcher matcher = pattern.matcher(suffix);
         return matcher.matches() ? suffix : null;
     }
-
 
     /**
      * A class to manage locking so that an active process for a DOI will finish executing before
@@ -499,7 +512,8 @@ public class PassDoiServlet extends HttpServlet {
 
         private String passTypeString;
 
-        static {// these values represent how types are stored on the issn field for the PASS Journal object
+        static {
+            // these values represent how types are stored on the issn field for the PASS Journal object
             PRINT.passTypeString = "Print";
             ELECTRONIC.passTypeString = "Online";
         }
@@ -510,7 +524,8 @@ public class PassDoiServlet extends HttpServlet {
 
         private String crossrefTypeString;
 
-        static {// these values represent how issn types are presented in Crossref metadata
+        static {
+            // these values represent how issn types are presented in Crossref metadata
             PRINT.crossrefTypeString = "print";
             ELECTRONIC.crossrefTypeString = "electronic";
         }

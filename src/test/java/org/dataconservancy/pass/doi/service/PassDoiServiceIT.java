@@ -145,7 +145,8 @@ public class PassDoiServiceIT {
      * @throws Exception if something goes wrong
      */
     @Test
-    public void bookDoiFailTest() throws Exception {//books have isbn, not issn - this should cause a failure
+    public void bookDoiFailTest() throws Exception {
+        // books have isbn, not issn - this should cause a failure
         String bookDoiChapter = "10.1002/0470841559.ch1";
         HttpUrl.Builder urlBuilder = HttpUrl.parse(doiServiceUrl).newBuilder().addQueryParameter("doi", bookDoiChapter);
         String url = urlBuilder.build().toString();

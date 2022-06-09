@@ -207,7 +207,6 @@ public class PassDoiServiceTest {
         List<String> issnListOneIssn = new ArrayList<>();
         issnListOneIssn.add(issn5);
 
-
         completeJournal = new Journal();
         completeJournal.setId(completeId);
         completeJournal.setJournalName(journalName);
@@ -226,7 +225,6 @@ public class PassDoiServiceTest {
         missingOneIssnJournal.setJournalName(journalName);
         missingOneIssnJournal.setIssns(issnListOneIssn);
 
-
         when(passClientMock.createAndReadResource(any(), eq(Journal.class))).thenAnswer(i -> {
             final Journal givenJournalToCreate = i.getArgument(0);
             givenJournalToCreate.setId(newJournalId);
@@ -241,7 +239,6 @@ public class PassDoiServiceTest {
             new HashSet<>(Collections.singleton(missingNameId)));
         when(passClientMock.findAllByAttribute(Journal.class, "issns", issn5)).thenReturn(
             new HashSet<>(Collections.singleton(missingOneIssnId)));
-
 
         when(passClientMock.readResource(completeId, Journal.class)).thenReturn(completeJournal);
         when(passClientMock.readResource(missingNameId, Journal.class)).thenReturn(missingNameJournal);
@@ -343,7 +340,6 @@ public class PassDoiServiceTest {
         assertEquals(2, newJournal.getIssns().size());
         assertEquals(nlmta, newJournal.getNlmta());
 
-
         //test that an xref journal with only one issn will find its match in a pass journal containing two issns
         xrefJournal = new Journal();
         xrefJournal.getIssns().add(issn4);
@@ -352,7 +348,6 @@ public class PassDoiServiceTest {
         newJournal = underTest.updateJournalInPass(xrefJournal);
         assertEquals(2, newJournal.getIssns().size());
         assertEquals(nlmta, newJournal.getNlmta());
-
     }
 
     /**
@@ -381,8 +376,6 @@ public class PassDoiServiceTest {
 
         resultUri = underTest.find("MOO", Arrays.asList(issn1, issn2));
         assertNotNull(resultUri);
-
-
     }
 
     /**
@@ -400,7 +393,6 @@ public class PassDoiServiceTest {
         assertNotNull(blob.getJsonObject("message").getJsonArray("ISSN"));
         assertEquals(blob.getJsonObject("message").getJsonArray("ISSN"),
                      object.getJsonObject("message").getJsonArray("ISSN"));
-
     }
 
     /**
