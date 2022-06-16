@@ -35,6 +35,7 @@ jobs:
 
   run-tests:
     name: "Run Unit & Integration Tests"
+    needs: pom-workaround
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout the repository"
