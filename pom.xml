@@ -46,8 +46,6 @@
     <build-helper-maven-plugin.version>3.0.0</build-helper-maven-plugin.version>
     <fabric8.docker.maven.plugin.version>0.30.0</fabric8.docker.maven.plugin.version>
     <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
     <maven.failsafe.plugin.version>2.22.0</maven.failsafe.plugin.version>
     <maven.javadoc.plugin.version>3.0.1</maven.javadoc.plugin.version>
     <maven.jar.plugin.version>3.1.1</maven.jar.plugin.version>
@@ -66,7 +64,7 @@
     <pass.java.client.version>0.9.0-SNAPSHOT</pass.java.client.version>
     <pass.model.version>0.9.0-SNAPSHOT</pass.model.version>
     <slf4j.version>1.7.25</slf4j.version>
-    <spring.boot.version>2.1.5.RELEASE</spring.boot.version>
+    <spring.boot.version>2.3.3.RELEASE</spring.boot.version>
 
     <!-- integration test dependency versions -->
     <docker.fcrepo.version>oapass/fcrepo:4.7.5-3.2-2</docker.fcrepo.version>
@@ -142,6 +140,7 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${spring.boot.version}</version>
         <executions>
           <execution>
             <goals>
