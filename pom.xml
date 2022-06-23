@@ -10,7 +10,6 @@
     <version>0.0.1-SNAPSHOT</version>
   </parent>
 
-  <groupId>org.dataconservancy.pass</groupId>
   <artifactId>pass-doi-service</artifactId>
   <version>1.0.1-SNAPSHOT</version>
 
@@ -64,8 +63,8 @@
     <logback-classic.version>1.2.3</logback-classic.version>
     <mockito.version>2.27.0</mockito.version>
     <okhttp.version>3.14.1</okhttp.version>
-    <pass.java.client.version>0.6.0</pass.java.client.version>
-    <pass.model.version>3.1.1</pass.model.version>
+    <pass.java.client.version>0.9.0-SNAPSHOT</pass.java.client.version>
+    <pass.model.version>0.9.0-SNAPSHOT</pass.model.version>
     <slf4j.version>1.7.25</slf4j.version>
     <spring.boot.version>2.1.5.RELEASE</spring.boot.version>
 
@@ -366,12 +365,12 @@
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.dataconservancy.pass</groupId>
+      <groupId>org.eclipse.pass</groupId>
       <artifactId>pass-data-client</artifactId>
       <version>${pass.java.client.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.dataconservancy.pass</groupId>
+      <groupId>org.eclipse.pass</groupId>
       <artifactId>pass-client-api</artifactId>
       <version>${pass.java.client.version}</version>
     </dependency>
