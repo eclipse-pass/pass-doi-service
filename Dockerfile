@@ -1,4 +1,4 @@
-FROM tomcat:10
+FROM tomcat:8
 
 ENV IMAGE_JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre
 

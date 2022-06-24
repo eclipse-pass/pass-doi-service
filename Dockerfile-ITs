@@ -1,4 +1,4 @@
-FROM tomcat:10
+FROM tomcat:8
 
 ENV PASS_FEDORA_USER=${pass.fedora.user} \
 PASS_FEDORA_PASSWORD=${pass.fedora.password} \
