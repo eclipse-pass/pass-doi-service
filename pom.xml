@@ -10,7 +10,7 @@
     <version>0.0.1-SNAPSHOT</version>
   </parent>
 
-  <groupId>org.dataconservancy.pass</groupId>
+  <groupId>org.eclipse.pass</groupId>
   <artifactId>pass-doi-service</artifactId>
   <version>1.0.1-SNAPSHOT</version>
 
@@ -63,16 +63,14 @@
     <junit.version>4.12</junit.version>
     <logback-classic.version>1.2.3</logback-classic.version>
     <mockito.version>2.27.0</mockito.version>
-    <okhttp.version>3.14.1</okhttp.version>
-    <pass.java.client.version>0.6.0</pass.java.client.version>
+    <okhttp.version>4.2.2</okhttp.version>
+    <pass.java.client.version>0.9.0-SNAPSHOT</pass.java.client.version>
     <pass.model.version>3.1.1</pass.model.version>
     <slf4j.version>1.7.25</slf4j.version>
-    <spring.boot.version>2.1.5.RELEASE</spring.boot.version>
 
     <!-- integration test dependency versions -->
-    <docker.fcrepo.version>oapass/fcrepo:4.7.5-3.2-2</docker.fcrepo.version>
-    <docker.indexer.version>oapass/indexer@sha256:e51092a9d433219d52207f1ec3f5ea7c652d51f516bcbe9434dae556b921546d
-    </docker.indexer.version>
+    <docker.fcrepo.version>oapass/fcrepo:4.7.5-3.4-0.4.5</docker.fcrepo.version>
+    <docker.indexer.version>oapass/indexer:0.0.18-3.4-1</docker.indexer.version>
     <docker.elasticsearch.version>docker.elastic.co/elasticsearch/elasticsearch-oss:6.2.3</docker.elasticsearch.version>
 
     <!-- other integration test related properties -->
@@ -95,18 +93,6 @@
 
     <failOnMissingWebXml>false</failOnMissingWebXml>
   </properties>
-
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-dependencies</artifactId>
-        <version>${spring.boot.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 
   <profiles>
     <profile>
@@ -139,19 +125,6 @@
   <build>
     <finalName>pass-doi-service</finalName>
     <plugins>
-      <!-- the purpose of this section is to provide an alternative to using the Spring boot parent pom -->
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>repackage</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
@@ -309,6 +282,12 @@
                       <name>its</name>
                       <alias>indexer</alias>
                     </network>
+		    <wait>
+                      <http>
+                        <url>http://${pass.elasticsearch.host}:${es.port}/pass/</url>
+                      </http>
+                      <time>120000</time>
+                    </wait>
                     <volumes>
                       <bind>
                         <volume>${project.build.testOutputDirectory}/esconfig:/app/esconfig</volume>
@@ -361,10 +340,6 @@
   </build>
 
   <dependencies>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
     <dependency>
       <groupId>org.dataconservancy.pass</groupId>
       <artifactId>pass-data-client</artifactId>
