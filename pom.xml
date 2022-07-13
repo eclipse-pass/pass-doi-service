@@ -16,7 +16,6 @@
   <name>Eclipse-PASS Doi Service</name>
   <description>Service for looking up DOIs for journals</description>
   <url>https://github.com/eclipse-pass/pass-doi-service</url>
-
   <licenses>
     <license>
       <name>The Apache License, Version 2.0</name>
