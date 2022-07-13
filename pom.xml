@@ -37,7 +37,7 @@
   <scm>
     <connection>scm:git:git://github.com/eclipse-pass/pass-doi-service.git</connection>
     <developerConnection>scm:git:ssh://github.com:eclipse-pass/pass-doi-service.git</developerConnection>
-    <url>http://github.com/eclipse-pass/main/tree/pass-doi-service</url>
+    <url>http://github.com/eclipse-pass/pass-doi-service/tree/main/</url>
     <tag>HEAD</tag>
   </scm>
 
