@@ -54,8 +54,6 @@
     <logback-classic.version>1.2.3</logback-classic.version>
     <mockito.version>2.27.0</mockito.version>
     <okhttp.version>4.2.2</okhttp.version>
-    <pass.java.client.version>0.1.0-SNAPSHOT</pass.java.client.version>
-    <pass.model.version>3.1.1</pass.model.version>
     <slf4j.version>1.7.25</slf4j.version>
 
     <!-- integration test dependency versions -->
@@ -88,12 +86,12 @@
     <dependency>
       <groupId>org.eclipse.pass</groupId>
       <artifactId>pass-data-client</artifactId>
-      <version>${pass.java.client.version}</version>
+      <version>${pass-java-client.version}</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.pass</groupId>
       <artifactId>pass-client-api</artifactId>
-      <version>${pass.java.client.version}</version>
+      <version>${pass-java-client.version}</version>
     </dependency>
     <dependency>
       <groupId>org.glassfish</groupId>
