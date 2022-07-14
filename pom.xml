@@ -46,16 +46,6 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <!-- plugin versions -->
-    <build-helper-maven-plugin.version>3.0.0</build-helper-maven-plugin.version>
-    <fabric8.docker.maven.plugin.version>0.30.0</fabric8.docker.maven.plugin.version>
-    <maven.failsafe.plugin.version>2.22.0</maven.failsafe.plugin.version>
-    <maven.javadoc.plugin.version>3.0.1</maven.javadoc.plugin.version>
-    <maven.jar.plugin.version>3.1.1</maven.jar.plugin.version>
-    <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
-    <maven.surefire.plugin.version>2.22.0</maven.surefire.plugin.version>
-    <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
-
     <!-- dependency versions -->
     <javax.json.version>1.1.4</javax.json.version>
     <javax.json.api.version>1.1.4</javax.json.api.version>
@@ -187,7 +177,7 @@
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
-        <version>${fabric8.docker.maven.plugin.version}</version>
+        <version>${docker-maven-plugin.version}</version>
         <executions>
           <execution>
             <id>build-before-its</id>
@@ -318,7 +308,7 @@
                       <name>its</name>
                       <alias>indexer</alias>
                     </network>
-		    <wait>
+		                <wait>
                       <http>
                         <url>http://${pass.elasticsearch.host}:${es.port}/pass/</url>
                       </http>
@@ -347,7 +337,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>${maven.failsafe.plugin.version}</version>
+        <version>${maven-failsafe-plugin.version}</version>
         <configuration>
           <systemProperties>
             <pass.fedora.user>${pass.fedora.user}</pass.fedora.user>
