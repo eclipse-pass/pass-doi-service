@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -13,9 +11,11 @@
   <groupId>org.eclipse.pass</groupId>
   <artifactId>pass-doi-service</artifactId>
   <version>0.1.0-SNAPSHOT</version>
-
   <packaging>war</packaging>
 
+  <name>Eclipse-PASS Doi Service</name>
+  <description>Service for looking up DOIs for journals</description>
+  <url>https://github.com/eclipse-pass/pass-doi-service</url>
   <licenses>
     <license>
       <name>The Apache License, Version 2.0</name>
@@ -34,21 +34,14 @@
     </developer>
   </developers>
 
+  <scm>
+    <connection>scm:git:git://github.com/eclipse-pass/pass-doi-service.git</connection>
+    <developerConnection>scm:git:ssh://github.com:eclipse-pass/pass-doi-service.git</developerConnection>
+    <url>http://github.com/eclipse-pass/pass-doi-service/tree/main/</url>
+    <tag>HEAD</tag>
+  </scm>
+
   <properties>
-    <!-- general properties -->
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
-    <!-- plugin versions -->
-    <build-helper-maven-plugin.version>3.0.0</build-helper-maven-plugin.version>
-    <fabric8.docker.maven.plugin.version>0.30.0</fabric8.docker.maven.plugin.version>
-    <maven.failsafe.plugin.version>2.22.0</maven.failsafe.plugin.version>
-    <maven.javadoc.plugin.version>3.0.1</maven.javadoc.plugin.version>
-    <maven.jar.plugin.version>3.1.1</maven.jar.plugin.version>
-    <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
-    <maven.surefire.plugin.version>2.22.0</maven.surefire.plugin.version>
-    <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
-
     <!-- dependency versions -->
     <javax.json.version>1.1.4</javax.json.version>
     <javax.json.api.version>1.1.4</javax.json.api.version>
@@ -57,8 +50,6 @@
     <logback-classic.version>1.2.3</logback-classic.version>
     <mockito.version>2.27.0</mockito.version>
     <okhttp.version>4.2.2</okhttp.version>
-    <pass.java.client.version>0.1.0-SNAPSHOT</pass.java.client.version>
-    <pass.model.version>3.1.1</pass.model.version>
     <slf4j.version>1.7.25</slf4j.version>
 
     <!-- integration test dependency versions -->
@@ -87,33 +78,71 @@
     <failOnMissingWebXml>false</failOnMissingWebXml>
   </properties>
 
-  <profiles>
-    <profile>
-      <id>external-fcrepo-server</id>
-      <activation>
-        <property>
-          <name>fcrepo.server</name>
-        </property>
-      </activation>
-      <properties>
-        <fcrepo.skip>true</fcrepo.skip>
-        <pass.fedora.baseurl>http://${fcrepo.server}:${fcrepo.http.port}/fcrepo/rest/</pass.fedora.baseurl>
-      </properties>
-    </profile>
-    <profile>
-      <id>standard</id>
-      <activation>
-        <property>
-          <name>standard</name>
-        </property>
-      </activation>
-      <properties>
-        <fcrepo.http.port>8080</fcrepo.http.port>
-        <fcrepo.jms.port>61616</fcrepo.jms.port>
-        <es.port>9200</es.port>
-      </properties>
-    </profile>
-  </profiles>
+  <dependencies>
+    <dependency>
+      <groupId>org.eclipse.pass</groupId>
+      <artifactId>pass-data-client</artifactId>
+      <version>${pass-java-client.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.pass</groupId>
+      <artifactId>pass-client-api</artifactId>
+      <version>${pass-java-client.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish</groupId>
+      <artifactId>javax.json</artifactId>
+      <version>${javax.json.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>okhttp</artifactId>
+      <version>${okhttp.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.json</groupId>
+      <artifactId>javax.json-api</artifactId>
+      <version>${javax.json.api.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>${javax.servlet.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>${logback-classic.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <repositories>
+    <repository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype Nexus Snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
 
   <build>
     <finalName>pass-doi-service</finalName>
@@ -144,7 +173,7 @@
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
-        <version>${fabric8.docker.maven.plugin.version}</version>
+        <version>${docker-maven-plugin.version}</version>
         <executions>
           <execution>
             <id>build-before-its</id>
@@ -275,7 +304,7 @@
                       <name>its</name>
                       <alias>indexer</alias>
                     </network>
-		    <wait>
+		                <wait>
                       <http>
                         <url>http://${pass.elasticsearch.host}:${es.port}/pass/</url>
                       </http>
@@ -304,7 +333,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>${maven.failsafe.plugin.version}</version>
+        <version>${maven-failsafe-plugin.version}</version>
         <configuration>
           <systemProperties>
             <pass.fedora.user>${pass.fedora.user}</pass.fedora.user>
@@ -329,72 +358,33 @@
       </plugin>
 
     </plugins>
-
   </build>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.eclipse.pass</groupId>
-      <artifactId>pass-data-client</artifactId>
-      <version>${pass.java.client.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.pass</groupId>
-      <artifactId>pass-client-api</artifactId>
-      <version>${pass.java.client.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.glassfish</groupId>
-      <artifactId>javax.json</artifactId>
-      <version>${javax.json.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>okhttp</artifactId>
-      <version>${okhttp.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>javax.json</groupId>
-      <artifactId>javax.json-api</artifactId>
-      <version>${javax.json.api.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <version>${javax.servlet.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>${slf4j.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>${logback-classic.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>${mockito.version}</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-
-  <repositories>
-    <repository>
-      <id>sonatype-nexus-snapshots</id>
-      <name>Sonatype Nexus Snapshots</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
+  <profiles>
+    <profile>
+      <id>external-fcrepo-server</id>
+      <activation>
+        <property>
+          <name>fcrepo.server</name>
+        </property>
+      </activation>
+      <properties>
+        <fcrepo.skip>true</fcrepo.skip>
+        <pass.fedora.baseurl>http://${fcrepo.server}:${fcrepo.http.port}/fcrepo/rest/</pass.fedora.baseurl>
+      </properties>
+    </profile>
+    <profile>
+      <id>standard</id>
+      <activation>
+        <property>
+          <name>standard</name>
+        </property>
+      </activation>
+      <properties>
+        <fcrepo.http.port>8080</fcrepo.http.port>
+        <fcrepo.jms.port>61616</fcrepo.jms.port>
+        <es.port>9200</es.port>
+      </properties>
+    </profile>
+  </profiles>
 </project>
