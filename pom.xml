@@ -54,7 +54,7 @@
 
     <!-- integration test dependency versions -->
     <docker.fcrepo.version>oapass/fcrepo:0.1.0@sha256:749cdb6d44ed723f7bd0886a75190f79353078cf4738aa290e5ec1176a9340e4</docker.fcrepo.version>
-    <docker.indexer.version>oapass/indexer:0.1.0@sha256:5ad45a9d227d9e48a607d9344b72a6bf9eeb66388a8088794bdbd5e4eab5de2d</docker.indexer.version>
+    <docker.indexer.version>oapass/indexer:0.1.0@sha256:48364e4341ff476a92d31cd391158d832f6ba01e66fa50c79f67d3595930289b</docker.indexer.version>
     <docker.elasticsearch.version>docker.elastic.co/elasticsearch/elasticsearch-oss:6.2.3</docker.elasticsearch.version>
 
     <!-- other integration test related properties -->
