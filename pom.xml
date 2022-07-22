@@ -53,12 +53,12 @@
     <slf4j.version>1.7.25</slf4j.version>
 
     <!-- integration test dependency versions -->
-    <docker.fcrepo.version>oapass/fcrepo:4.7.5-3.4-0.4.5</docker.fcrepo.version>
-    <docker.indexer.version>oapass/indexer:0.0.18-3.4-1</docker.indexer.version>
+    <docker.fcrepo.version>oapass/fcrepo:0.1.0@sha256:749cdb6d44ed723f7bd0886a75190f79353078cf4738aa290e5ec1176a9340e4</docker.fcrepo.version>
+    <docker.indexer.version>oapass/indexer:0.1.0@sha256:5ad45a9d227d9e48a607d9344b72a6bf9eeb66388a8088794bdbd5e4eab5de2d</docker.indexer.version>
     <docker.elasticsearch.version>docker.elastic.co/elasticsearch/elasticsearch-oss:6.2.3</docker.elasticsearch.version>
 
     <!-- other integration test related properties -->
-    <pass.jsonld.context>https://oa-pass.github.io/pass-data-model/src/main/resources/context-3.4.jsonld
+    <pass.jsonld.context>https://eclipse-pass.github.io/pass-data-model/src/main/resources/context-3.5.jsonld
     </pass.jsonld.context>
     <fcrepo.skip>false</fcrepo.skip>
     <indexer.skip>false</indexer.skip>
@@ -298,7 +298,7 @@
                       <PI_FEDORA_JMS_QUEUE>fedora</PI_FEDORA_JMS_QUEUE>
                       <PI_TYPE_PREFIX>http://oapass.org/ns/pass#</PI_TYPE_PREFIX>
                       <PI_LOG_LEVEL>DEBUG</PI_LOG_LEVEL>
-                      <PI_ES_CONFIG>/app/esconfig-3.4.json</PI_ES_CONFIG>
+                      <PI_ES_CONFIG>/app/esconfig-3.5.json</PI_ES_CONFIG>
                     </env>
                     <network>
                       <name>its</name>
