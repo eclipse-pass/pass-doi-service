@@ -189,7 +189,7 @@
               <images>
                 <image>
                   <!-- Production image: built, but not run -->
-                  <name>pass-doi-service</name>
+                  <name>oapass/doi-service:${project.version}</name>
                   <build>
                     <contextDir>${project.basedir}</contextDir>
                     <dockerFile>Dockerfile</dockerFile>
