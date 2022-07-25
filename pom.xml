@@ -52,11 +52,6 @@
     <okhttp.version>4.2.2</okhttp.version>
     <slf4j.version>1.7.25</slf4j.version>
 
-    <!-- integration test dependency versions -->
-    <docker.fcrepo.version>oapass/fcrepo:0.1.0@sha256:749cdb6d44ed723f7bd0886a75190f79353078cf4738aa290e5ec1176a9340e4</docker.fcrepo.version>
-    <docker.indexer.version>oapass/indexer:0.1.0@sha256:48364e4341ff476a92d31cd391158d832f6ba01e66fa50c79f67d3595930289b</docker.indexer.version>
-    <docker.elasticsearch.version>docker.elastic.co/elasticsearch/elasticsearch-oss:6.2.3</docker.elasticsearch.version>
-
     <!-- other integration test related properties -->
     <pass.jsonld.context>https://eclipse-pass.github.io/pass-data-model/src/main/resources/context-3.5.jsonld
     </pass.jsonld.context>
@@ -225,7 +220,7 @@
                 <image>
                   <!-- Fedora and ES must be exposed to the IT runtime, but the indexer is not -->
                   <alias>fcrepo</alias>
-                  <name>${docker.fcrepo.version}</name>
+                  <name>${it.image.fcrepo.name}</name>
                   <run>
                     <skip>${fcrepo.skip}</skip>
                     <wait>
@@ -260,7 +255,7 @@
                 </image>
                 <image>
                   <alias>elasticsearch</alias>
-                  <name>${docker.elasticsearch.version}</name>
+                  <name>${it.image.elasticsearch.name}</name>
                   <run>
                     <skip>${indexer.skip}</skip>
                     <wait>
@@ -285,7 +280,7 @@
                 </image>
                 <image>
                   <alias>indexer</alias>
-                  <name>${docker.indexer.version}</name>
+                  <name>${it.image.indexer.name}</name>
                   <run>
                     <skip>${indexer.skip}</skip>
                     <env>
