@@ -40,3 +40,27 @@ presented to clients:
 PASS_FEDORA_BASEURL
 PASS_EXTERNAL_FEDORA_BASEURL
 ```
+
+## Release
+
+This project will build it's own production ready Docker image locally, but will not automatically push the image. To build, run:
+
+``` sh
+mvn install
+```
+
+This will run all tests and build the final Docker image with the tag: `oapass/doi-service:${project.version}`. You can optionally retag the image with a custom tag:
+
+``` sh
+docker tag <originalTag> <newTag>
+# E.g. Building this project at version 0.2.0-SNAPSHOT, but create a tag for 0.1.0 version
+docker tag oapass/doi-service:0.2.0-SNAPSHOT oapass/doi-service:0.1.0
+```
+
+When ready, you can manually push the Docker image to Docker Hub:
+
+``` sh
+docker push <image>:<tag>
+# E.g. Push the 0.1.0 version of the image
+docker push oapass/doi-service:0.1.0
+```
