@@ -43,7 +43,7 @@ PASS_EXTERNAL_FEDORA_BASEURL
 
 ## Release
 
-This project will build it's own production ready Docker image locally, but will not automatically push the image. To build, run:
+This project will build its own production ready Docker image locally, but will not automatically push the image. To build, run:
 
 ``` sh
 mvn install

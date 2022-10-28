@@ -1,14 +1,33 @@
-package org.dataconservancy.pass.doi.service;
+/*
+ *
+ * Copyright 2022 Johns Hopkins University
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+package org.eclipse.pass.doi.service;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
 
 import org.dataconservancy.pass.client.PassClient;
 import org.dataconservancy.pass.client.PassClientFactory;
@@ -20,8 +39,103 @@ public class FedoraConnector {
     private static final Logger LOG = LoggerFactory.getLogger(FedoraConnector.class);
     PassClient passClient = PassClientFactory.getPassClient();
 
-    private String FEDORA_INTERNAL = "http://fcrepo:8080/fcrepo/rest/";
-    private String FEDORA_EXTERNAL = "https://pass.local/fcrepo/rest/";
+    /**
+     * This is the only method that the Servlet calls - it orchestrates the process of building
+     * a Journal object from the supplied JSON object, seeing if the Journal is present in PASS,
+     * creating or updating that Journal if needed, and finally returning the PASS id for the Journal
+     *
+     * @param xrefJsonObject the supplied crossref JSON object
+     * @return the id of the corresponding Journal object in PASS
+     */
+    String processXrefJsonObject(JsonObject xrefJsonObject) {
+
+        // we have something JSONy, let's build a journal object from it
+        LOG.debug("Building pass journal");
+        Journal journal = buildPassJournal(xrefJsonObject);
+
+        // and compare it with what we already have in PASS, updating PASS if necessary
+        LOG.debug("Comparing journal object with possible PASS version");
+        Journal updatedJournal = updateJournalInPass(journal);
+
+        //we return the journal id if we have one
+        String journalId = null;
+        if (updatedJournal != null) {
+            journalId = updatedJournal.getId().toString();
+        }
+
+        return journalId;
+    }
+
+    /**
+     * Takes JSON which represents journal article metadata from Crossref
+     * and populates a new Journal object. Currently we take typed issns and the journal
+     * name.
+     *
+     * @param metadata - the JSON metadata from Crossref
+     * @return the PASS journal object;s id
+     */
+    Journal buildPassJournal(JsonObject metadata) {
+
+        LOG.debug("JSON input (from Crossref): " + metadata.toString());
+
+        final String XREF_MESSAGE = "message";
+        final String XREF_TITLE = "container-title";
+        final String XREF_ISSN_TYPE_ARRAY = "issn-type";
+        final String XREF_ISSN_ARRAY = "ISSN";
+        final String XREF_ISSN_TYPE = "type";
+        final String XREF_ISSN_VALUE = "value";
+
+        Journal passJournal = new Journal();
+
+        JsonObject messageObject = metadata.getJsonObject(XREF_MESSAGE);
+        JsonArray containerTitleArray = messageObject.getJsonArray(XREF_TITLE);
+        JsonArray issnTypeArray = messageObject.getJsonArray(XREF_ISSN_TYPE_ARRAY);
+        JsonArray issnArray = messageObject.getJsonArray(XREF_ISSN_ARRAY);
+
+        if (!containerTitleArray.isNull(0)) {
+            passJournal.setJournalName(containerTitleArray.getString(0));
+        }
+
+        Set<String> processedIssns = new HashSet<>();
+
+        if (issnTypeArray != null) {
+            for (int i = 0; i < issnTypeArray.size(); i++) {
+                JsonObject issn = issnTypeArray.getJsonObject(i);
+
+                String type = "";
+
+                //translate crossref issn-type strings to PASS issn-type strings
+                if (PassDoiServlet.IssnType.PRINT.getCrossrefTypeString().equals(issn.getString(XREF_ISSN_TYPE))) {
+                    type = PassDoiServlet.IssnType.PRINT.getPassTypeString();
+                } else if (PassDoiServlet.IssnType.ELECTRONIC.getCrossrefTypeString()
+                                                             .equals(issn.getString(XREF_ISSN_TYPE))) {
+                    type = PassDoiServlet.IssnType.ELECTRONIC.getPassTypeString();
+                }
+
+                //collect the value for this issn
+                String value = issn.getString(XREF_ISSN_VALUE);
+                processedIssns.add(value);
+
+                if (value.length() > 0) {
+                    passJournal.getIssns().add(String.join(":", type, value));
+                    LOG.debug("Adding typed ISSN to journal object: " + String.join(":", type, value));
+                }
+            }
+        }
+
+        if (issnArray != null) {
+            for (int i = 0; i < issnArray.size(); i++) {
+                // if we have issns which were not given as typed, we add them without a type
+                String issn = issnArray.getString(i);
+                if (!processedIssns.contains(issn)) {
+                    passJournal.getIssns().add(":" + issn);//do this to conform with type:value format
+                }
+            }
+        }
+
+        passJournal.setId(null); // we don't need this
+        return passJournal;
+    }
 
     /**
      * Take a Journal object constructed from Crossref metadata, and compare it with the
@@ -67,7 +181,7 @@ public class FedoraConnector {
                 }
 
             } else {
-                String uhoh = "Journal URI " + passJournalUri.toString() + " was found, but the object could not be " +
+                String uhoh = "Journal URI " + passJournalUri + " was found, but the object could not be " +
                               "retrieved. This should never happen.";
                 LOG.error(uhoh);
                 throw new RuntimeException(uhoh);
@@ -75,8 +189,10 @@ public class FedoraConnector {
 
         }
         //externalize the internal journal id
+        String FEDORA_INTERNAL = "http://fcrepo:8080/fcrepo/rest/";
         String internalPrefix = System.getenv("PASS_FEDORA_BASEURL") != null ? System.getenv(
             "PASS_FEDORA_BASEURL") : FEDORA_INTERNAL;
+        String FEDORA_EXTERNAL = "https://pass.local/fcrepo/rest/";
         String externalPrefix = System.getenv("PASS_EXTERNAL_FEDORA_BASEURL") != null ? System.getenv(
             "PASS_EXTERNAL_FEDORA_BASEURL") : FEDORA_EXTERNAL;
         internalPrefix = internalPrefix + (internalPrefix.endsWith("/") ? "" : "/");
@@ -88,7 +204,7 @@ public class FedoraConnector {
             passJournal.setId(URI.create(internalUriString.replace(internalPrefix, externalPrefix)));
         }
         LOG.debug("passJournal URI: " + passJournal.getId().toString());
-        LOG.debug("Returning journal object: " + passJournal.toString());
+        LOG.debug("Returning journal object: " + passJournal);
         return passJournal;
     }
 
@@ -155,4 +271,5 @@ public class FedoraConnector {
         // nothing matches, create a new journal
         return null;
     }
+
 }

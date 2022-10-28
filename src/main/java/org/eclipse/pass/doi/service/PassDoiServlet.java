@@ -14,7 +14,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package org.dataconservancy.pass.doi.service;
+package org.eclipse.pass.doi.service;
 
 import static java.lang.Thread.sleep;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -27,7 +27,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.json.Json;
-import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.stream.JsonParsingException;
@@ -43,9 +42,6 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.dataconservancy.pass.client.PassJsonAdapter;
-import org.dataconservancy.pass.client.adapter.PassJsonAdapterBasic;
-import org.dataconservancy.pass.model.Journal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +50,6 @@ public class PassDoiServlet extends HttpServlet {
 
     private static final Logger LOG = LoggerFactory.getLogger(PassDoiServlet.class);
 
-    PassJsonAdapter json = new PassJsonAdapterBasic();
     FedoraConnector fedoraConnector = new FedoraConnector();
 
     private OkHttpClient client;
@@ -162,20 +157,7 @@ public class PassDoiServlet extends HttpServlet {
             }
         } else {
             // have a non-empty string to process
-            LOG.debug("Building pass journal");
-            // we probably have something JSONy at this point. Let's build a journal object from it
-            Journal journal = buildPassJournal(xrefJsonObject);
-            LOG.debug("Comparing journal object with possible PASS version");
-            // and compare it with what we already have in PASS, updating PASS if necessary
-
-            Journal updatedJournal = fedoraConnector.updateJournalInPass(journal);
-
-            String journalId = null;
-
-            if (updatedJournal != null) {
-                journalId = updatedJournal.getId().toString();
-            }
-
+            String journalId = fedoraConnector.processXrefJsonObject(xrefJsonObject);
             if (journalId != null) {
 
                 try (OutputStream out = response.getOutputStream()) {
@@ -188,6 +170,7 @@ public class PassDoiServlet extends HttpServlet {
                     response.setStatus(200);
                     LOG.info("Returning result for DOI " + doi);
                 }
+
             } else {
                 // journal id is null - this should never happen unless Crosssref journal is insufficient
                 // for example, if a book doi ws supplied which has no issns
@@ -245,78 +228,6 @@ public class PassDoiServlet extends HttpServlet {
         }
         return null;
     }
-
-    /**
-     * Takes JSON which represents journal article metadata from Crossref
-     * and populates a new Journal object. Currently we take typed issns and the journal
-     * name.
-     *
-     * @param metadata - the JSON metadata from Crossref
-     * @return the PASS journal object
-     */
-    Journal buildPassJournal(JsonObject metadata) {
-
-        LOG.debug("JSON input (from Crossref): " + metadata.toString());
-
-        final String XREF_MESSAGE = "message";
-        final String XREF_TITLE = "container-title";
-        final String XREF_ISSN_TYPE_ARRAY = "issn-type";
-        final String XREF_ISSN_ARRAY = "ISSN";
-        final String XREF_ISSN_TYPE = "type";
-        final String XREF_ISSN_VALUE = "value";
-
-        Journal passJournal = new Journal();
-
-        JsonObject messageObject = metadata.getJsonObject(XREF_MESSAGE);
-        JsonArray containerTitleArray = messageObject.getJsonArray(XREF_TITLE);
-        JsonArray issnTypeArray = messageObject.getJsonArray(XREF_ISSN_TYPE_ARRAY);
-        JsonArray issnArray = messageObject.getJsonArray(XREF_ISSN_ARRAY);
-
-        if (!containerTitleArray.isNull(0)) {
-            passJournal.setJournalName(containerTitleArray.getString(0));
-        }
-
-        Set<String> processedIssns = new HashSet<>();
-
-        if (issnTypeArray != null) {
-            for (int i = 0; i < issnTypeArray.size(); i++) {
-                JsonObject issn = issnTypeArray.getJsonObject(i);
-
-                String type = "";
-
-                //translate crossref issn-type strings to PASS issn-type strings
-                if (PassDoiServlet.IssnType.PRINT.getCrossrefTypeString().equals(issn.getString(XREF_ISSN_TYPE))) {
-                    type = PassDoiServlet.IssnType.PRINT.getPassTypeString();
-                } else if (PassDoiServlet.IssnType.ELECTRONIC.getCrossrefTypeString()
-                                                             .equals(issn.getString(XREF_ISSN_TYPE))) {
-                    type = PassDoiServlet.IssnType.ELECTRONIC.getPassTypeString();
-                }
-
-                //collect the value for this issn
-                String value = issn.getString(XREF_ISSN_VALUE);
-                processedIssns.add(value);
-
-                if (value.length() > 0) {
-                    passJournal.getIssns().add(String.join(":", type, value));
-                    LOG.debug("Adding typed ISSN to journal object: " + String.join(":", type, value));
-                }
-            }
-        }
-
-        if (issnArray != null) {
-            for (int i = 0; i < issnArray.size(); i++) {
-                // if we have issns which were not given as typed, we add them without a type
-                String issn = issnArray.getString(i);
-                if (!processedIssns.contains(issn)) {
-                    passJournal.getIssns().add(":" + issn);//do this to conform with type:value format
-                }
-            }
-        }
-
-        passJournal.setId(null); // we don't need this
-        return passJournal;
-    }
-
 
     /**
      * check to see whether supplied DOI is in Crossref format after splitting off a possible prefix

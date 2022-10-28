@@ -14,7 +14,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package org.dataconservancy.pass.doi.service;
+package org.eclipse.pass.doi.service;
 
 import static java.lang.Thread.sleep;
 import static org.junit.Assert.assertEquals;
