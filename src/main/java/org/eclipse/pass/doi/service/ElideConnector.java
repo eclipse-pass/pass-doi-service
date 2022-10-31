@@ -1,25 +1,8 @@
-/*
- *
- * Copyright 2022 Johns Hopkins University
- *
- *   Licensed under the Apache License, Version 2.0 (the "License");
- *   you may not use this file except in compliance with the License.
- *   You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
- */
 package org.eclipse.pass.doi.service;
 
-import java.net.URI;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -29,15 +12,23 @@ import java.util.stream.Stream;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 
-import org.dataconservancy.pass.client.PassClient;
-import org.dataconservancy.pass.client.PassClientFactory;
-import org.dataconservancy.pass.model.Journal;
+import com.yahoo.elide.RefreshableElide;
+import org.eclipse.pass.object.ElideDataStorePassClient;
+import org.eclipse.pass.object.PassClientResult;
+import org.eclipse.pass.object.PassClientSelector;
+import org.eclipse.pass.object.RSQL;
+import org.eclipse.pass.object.model.Journal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FedoraConnector {
+public class ElideConnector {
     private static final Logger LOG = LoggerFactory.getLogger(FedoraConnector.class);
-    PassClient passClient = PassClientFactory.getPassClient();
+
+    protected RefreshableElide refreshableElide;
+
+    protected ElideDataStorePassClient getNewClient() {
+        return new ElideDataStorePassClient(refreshableElide);
+    }
 
     /**
      * This is the only method that the Servlet calls - it orchestrates the process of building
@@ -46,6 +37,7 @@ public class FedoraConnector {
      *
      * @param xrefJsonObject the supplied crossref JSON object
      * @return the id of the corresponding Journal object in PASS
+     *
      */
     String resolveJournal(JsonObject xrefJsonObject) {
 
@@ -153,22 +145,20 @@ public class FedoraConnector {
         LOG.debug("GETTING NAME");
         String name = journal.getJournalName();
 
-        Journal passJournal;
+        Journal passJournal = find(name, issns);
 
-        URI passJournalUri = find(name, issns);
-
-        if (passJournalUri == null) {
+        if (passJournal == null) {
             // we don't have this journal in pass yet
             if (name != null && !name.isEmpty() && issns.size() > 0) {
                 // we have enough info to make a journal entry
-                passJournal = passClient.createAndReadResource(journal, Journal.class);
+                // passJournal = passClient.createAndReadResource(journal, Journal.class);
             } else {
                 // do not have enough to create a new journal
                 LOG.debug("Not enough info for journal " + name);
                 return null;
             }
         } else { //we have a journal, let's see if we can add anything new - just issns atm. we add only if not present
-            passJournal = passClient.readResource(passJournalUri, Journal.class);
+            //passJournal = passClient.readResource(passJournalUri, Journal.class);
 
             if (passJournal != null) {
                 //check to see if we can supply issns
@@ -177,35 +167,24 @@ public class FedoraConnector {
                                                              journal.getIssns().stream()).distinct()
                                                      .collect(Collectors.toList());
                     passJournal.setIssns(newIssnList);
-                    passClient.updateResource(passJournal);
+                    try (ElideDataStorePassClient passClient = getNewClient()) {
+                        passClient.updateObject(passJournal);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                } else {
+                    String uhoh = "Journal " + passJournal.getJournalName() +
+                                  " was found, but the object could not be " +
+                                  "retrieved. This should never happen.";
+                    LOG.error(uhoh);
+                    throw new RuntimeException(uhoh);
                 }
-
-            } else {
-                String uhoh = "Journal URI " + passJournalUri + " was found, but the object could not be " +
-                              "retrieved. This should never happen.";
-                LOG.error(uhoh);
-                throw new RuntimeException(uhoh);
             }
+        }
 
-        }
-        //externalize the internal journal id
-        String FEDORA_INTERNAL = "http://fcrepo:8080/fcrepo/rest/";
-        String internalPrefix = System.getenv("PASS_FEDORA_BASEURL") != null ? System.getenv(
-            "PASS_FEDORA_BASEURL") : FEDORA_INTERNAL;
-        String FEDORA_EXTERNAL = "https://pass.local/fcrepo/rest/";
-        String externalPrefix = System.getenv("PASS_EXTERNAL_FEDORA_BASEURL") != null ? System.getenv(
-            "PASS_EXTERNAL_FEDORA_BASEURL") : FEDORA_EXTERNAL;
-        internalPrefix = internalPrefix + (internalPrefix.endsWith("/") ? "" : "/");
-        externalPrefix = externalPrefix + (externalPrefix.endsWith("/") ? "" : "/");
-        LOG.debug("Internal prefix: " + internalPrefix);
-        LOG.debug("External prefix: " + externalPrefix);
-        String internalUriString = passJournal.getId().toString();
-        if (internalUriString.startsWith(internalPrefix)) {
-            passJournal.setId(URI.create(internalUriString.replace(internalPrefix, externalPrefix)));
-        }
-        LOG.debug("passJournal URI: " + passJournal.getId().toString());
-        LOG.debug("Returning journal object: " + passJournal);
         return passJournal;
+
     }
 
     /**
@@ -216,60 +195,56 @@ public class FedoraConnector {
      * @param issns the set of issns to find. we assume that the issns stored in the repo are of the format type:value
      * @return the URI of the best match, or null in nothing matches
      */
-    URI find(String name, List<String> issns) {
+    Journal find(String name, List<String> issns) {
 
-        Set<URI> nameUriSet = passClient.findAllByAttribute(Journal.class, "name", name);
-        Map<URI, Integer> uriScores = new HashMap<>();
+        //keep track of hits for searches
+        List<Journal> foundList = new ArrayList<>();
 
+        //look for journals with this name
+        try (ElideDataStorePassClient passClient = getNewClient()) {
+            String filter = RSQL.equals("name", name);
+            PassClientResult<Journal> result = passClient.
+                selectObjects(new PassClientSelector<Journal>(Journal.class, 0, 100, filter, null));
+            result.getObjects().forEach(j -> {
+                foundList.add(j);
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        //look for journals with any of these issns
         if (!issns.isEmpty()) {
             for (String issn : issns) {
-                Set<URI> issnList = passClient.findAllByAttribute(Journal.class, "issns", issn);
-                if (issnList != null) {
-                    for (URI uri : issnList) {
-                        Integer i = uriScores.putIfAbsent(uri, 1);
-                        if (i != null) {
-                            uriScores.put(uri, i + 1);
-                        }
-                    }
+                try (ElideDataStorePassClient passClient = getNewClient()) {
+                    String filter = RSQL.equals("issns", issn);
+                    PassClientResult<Journal> result = passClient.
+                        selectObjects(new PassClientSelector<>(Journal.class, 0, 100, filter, null));
+                    result.getObjects().forEach(j -> {
+                        foundList.add(j);
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         }
 
-        if (nameUriSet != null) {
-            for (URI uri : nameUriSet) {
-                Integer i = uriScores.putIfAbsent(uri, 1);
-                if (i != null) {
-                    uriScores.put(uri, i + 1);
-                }
-            }
-        }
+        //count the number of hits for each Journal
+        if (foundList.size() == 0) {
+            return null;
+        } else {
+            Map<Journal, Long> scoreMap = foundList.stream()
+                                                   .collect(Collectors.groupingBy(e -> e, Collectors.counting()));
 
-        if (uriScores.size() > 0) {
             // we have matches, pick the best one
-            Integer highScore = Collections.max(uriScores.values());
+            Long highScore = Collections.max(scoreMap.values());
 
-            int minimumQualifyingScore = 1;
-            // with so little to go on, we may realistically get just one hit
-
-            List<URI> sortedUris = new ArrayList<>();
-
-            for (int i = highScore; i >= minimumQualifyingScore; i--) {
-                for (URI uri : uriScores.keySet()) {
-                    if (uriScores.get(uri) == i) {
-                        sortedUris.add(uri);
-                    }
+            for (Journal journal : scoreMap.keySet()) {
+                if (scoreMap.get(journal).equals(highScore)) {
+                    return journal;
                 }
             }
-
-            if (sortedUris.size() > 0) {
-                // there are matching journals
-                // return the best match
-                return sortedUris.get(0);
-            }
         }
-
-        // nothing matches, create a new journal
-        return null;
+        return null; //never reached
     }
 
 }

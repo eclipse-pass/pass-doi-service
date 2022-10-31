@@ -157,7 +157,7 @@ public class PassDoiServlet extends HttpServlet {
             }
         } else {
             // have a non-empty string to process
-            String journalId = fedoraConnector.processXrefJsonObject(xrefJsonObject);
+            String journalId = fedoraConnector.resolveJournal(xrefJsonObject);
             if (journalId != null) {
 
                 try (OutputStream out = response.getOutputStream()) {
